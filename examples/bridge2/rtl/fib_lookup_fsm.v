@@ -34,7 +34,7 @@ module fib_lookup_fsm
   wire [`NUM_PORTS-1:0]           source_port_mask;
 
   reg [`FIB_ASZ-1:0]              init_ctr, nxt_init_ctr;
-  reg [4:0]                       state, nxt_state;
+  reg [5:0]                       state, nxt_state;
   reg                             lrefup_srdy;
   reg [`LL_REFSZ-1:0]             lrefup_count;
 

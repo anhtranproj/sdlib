@@ -68,9 +68,9 @@ module sd_rrmux
    output  [inputs-1:0]    c_drdy,
    input                   c_rearb,  // for use with mode 2 only
 
-   output reg [width-1:0]  p_data,
+   output     [width-1:0]  p_data,
    output [inputs-1:0]     p_grant,
-   output reg              p_srdy,
+   output                  p_srdy,
    input                   p_drdy
    );
   
@@ -79,9 +79,9 @@ module sd_rrmux
 
   reg [$clog2(inputs)-1:0] data_ind;
 
-  wire [width-1:0]     rr_mux_grid [0:inputs-1];
+  //wire [width-1:0]     rr_mux_grid [0:inputs-1];
   reg 		       rr_locked;
-  genvar               i;
+  //genvar               i;
   integer              j;
 
   assign c_drdy = rr_state & {inputs{p_drdy}};
@@ -103,11 +103,23 @@ module sd_rrmux
     end
   endfunction
   
+  always @*
+    begin
+      data_ind = 0;
+      for (j=0; j<inputs; j=j+1)
+        if (rr_state[j])
+          data_ind = j;
+    end
+
   generate
+/* -----\/----- EXCLUDED -----\/-----
     for (i=0; i<inputs; i=i+1)
       begin : grid_assign
+        wire [width-1:0] temp;
+        assign temp = c_data >> (i*width);
         assign rr_mux_grid[i] = c_data >> (i*width);
       end
+ -----/\----- EXCLUDED -----/\----- */
 
     if (mode == 2)
       begin : tp_gen
@@ -115,10 +127,12 @@ module sd_rrmux
         
         always @*
           begin
+/* -----\/----- EXCLUDED -----\/-----
             data_ind = 0;
             for (j=0; j<inputs; j=j+1)
               if (rr_state[j])
                 data_ind = j;
+ -----/\----- EXCLUDED -----/\----- */
 
             nxt_rr_locked = rr_locked;
 
@@ -138,17 +152,8 @@ module sd_rrmux
       end // block: tp_gen
   endgenerate
 
-  always @*
-    begin
-      p_data = 0;
-      p_srdy = 0;
-      for (j=0; j<inputs; j=j+1)
-        if (rr_state[j])
-          begin
-            p_data = rr_mux_grid[j];
-            p_srdy = c_srdy[j];
-          end
-    end
+  assign p_srdy = |(rr_state & c_srdy);
+  assign p_data = c_data[data_ind*width +: width];
   
   always @*
     begin

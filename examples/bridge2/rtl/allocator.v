@@ -54,6 +54,23 @@ module allocator
   assign obuf_addr = { cur_pg, cur_line };
 
   //------------------------------------------------------------
+  // icarus debug
+
+/* -----\/----- EXCLUDED -----\/-----
+  tape_record #(9+`PFW_SZ+`LL_PG_ASZ) record0
+    (.clk (clk), 
+    .data ({ reset,
+             crx_abort,
+             crx_commit,
+             crx_srdy,
+             par_drdy,
+             parr_srdy,
+             lnp_drdy,
+             pbra_drdy,
+             a2f_drdy, crx_data, parr_page }));
+ -----/\----- EXCLUDED -----/\----- */
+
+  //------------------------------------------------------------
   // page prefetch FIFO and state machine logic
   //------------------------------------------------------------
 
@@ -211,7 +228,7 @@ module allocator
         begin
           start_pg <= nxt_start_pg;
           cur_pg   <= nxt_cur_pg;
-          cur_line <= nxt_cur_line;
+          cur_line <= #1 nxt_cur_line;
           state    <= nxt_state;
         end
     end
