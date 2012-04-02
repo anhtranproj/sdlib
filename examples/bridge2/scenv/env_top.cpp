@@ -4,6 +4,7 @@
 #include "SpTraceVcd.h"
 #include <unistd.h>
 #include "Vbridge_ex2.h"
+#include "gmii_driver.h"
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -18,6 +19,8 @@ int sc_main(int argc, char *argv[])
   char dumpfile_name[FILENAME_SZ];
   char mem_src_name[FILENAME_SZ];
   VerilatedVcdC *tfp;
+  gmii_driver *driver[4];
+  char driver_name[40];
 	
   sc_clock clk("clk", 8, SC_NS, 0.5);
 
@@ -69,6 +72,14 @@ int sc_main(int argc, char *argv[])
   bridge_ex2.gmii_rxd_1 (gmii_rxd[1]);
   bridge_ex2.gmii_rxd_2 (gmii_rxd[2]);
   bridge_ex2.gmii_rxd_3 (gmii_rxd[3]);
+
+  for (int g=0; g<4; g++) {
+    sprintf (driver_name, "gmii_driver%d", g);
+    driver[g] = new gmii_driver(driver_name);
+    driver[g]->clk   (clk);
+    driver[g]->rx_dv (gmii_rx_dv[g]);
+    driver[g]->rxd   (gmii_rxd[g]);
+  }
     
   // Start Verilator traces
   if (dumping) {
@@ -79,9 +90,11 @@ int sc_main(int argc, char *argv[])
   }
 
   // set reset to 0 before sim start
-  reset.write (0);
+  reset.write (1);
 
-  sc_start();
+  sc_start(100);
+  reset.write (0);
+  sc_start(50000);
   /*
     sc_close_vcd_trace_file (trace_file);
   */

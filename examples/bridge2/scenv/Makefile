@@ -4,19 +4,19 @@ VERIDIR=obj_dir
 INCLUDES=-I$(SYSTEMC)/include -I$(VERIDIR) -I$(VERILATOR_ROOT)/include -I$(SYSTEMPERL)
 LINKOPT=-L$(SYSTEMC)/lib-linux -lsystemc -lm
 DEFINES=-DDEBUG
-OBJFILES=env_top.o di_mux.o \
+OBJFILES=env_top.o gmii_driver.o \
 $(VERIDIR)/Vbridge_ex2__ALL.a \
 verilated.o verilated_vcd_c.o Sp.o
 OPT_FAST=-O2
 
 CXX=g++ -g $(OPT_FAST) $(INCLUDES) $(DEFINES)
 
-all: sc_env_top
+all: env_top
 
-test: sc_env_top
-	./sc_env_top
+test: env_top
+	./env_top
 
-sc_env_top: $(OBJFILES)
+env_top: $(OBJFILES)
 	$(CXX) $^ -o $@ $(LINKOPT)
 
 verilated.o : $(VERILATOR_ROOT)/include/verilated.cpp
@@ -28,25 +28,9 @@ verilated_vcd_sc.o : $(VERILATOR_ROOT)/include/verilated_vcd_sc.cpp
 verilated_vcd_c.o : $(VERILATOR_ROOT)/include/verilated_vcd_c.cpp
 	$(CXX) -c $^
 
-$(VERIDIR)/Vtv80s.o:
-	make OPT_FAST="$(OPT_FAST)" -f $(VERIDIR)/Vtv80s.mk -C $(VERIDIR) Vtv80s.o
+$(VERIDIR)/Vbridge_ex2__ALL.a:
+	make OPT_FAST="$(OPT_FAST)" -f $(VERIDIR)/Vbridge_ex2.mk -C $(VERIDIR)
 	#(cd $(VERIDIR); make -f Vtv80s.mk Vtv80s.o)
-
-$(VERIDIR)/Vtv80s__Syms.o:
-	make OPT_FAST="$(OPT_FAST)" -f $(VERIDIR)/Vtv80s.mk -C $(VERIDIR) Vtv80s__Syms.o
-	#(cd $(VERIDIR); make -f Vtv80s.mk Vtv80s__Syms.o)
-
-$(VERIDIR)/Vtv80s__Trace.o:
-	(cd $(VERIDIR); make -f Vtv80s.mk Vtv80s__Trace.o)
-
-$(VERIDIR)/Vtv80s__Trace__Slow.o:
-	(cd $(VERIDIR); make -f Vtv80s.mk Vtv80s__Trace__Slow.o)
-
-$(VERIDIR)/VT16450.o:
-	make -C$(VERIDIR) -f VT16450.mk $(@F)
-
-$(VERIDIR)/VT16450__Syms.o:
-	make -C$(VERIDIR) -f VT16450.mk $(@F)
 
 Sp.o: $(SYSTEMPERL)/Sp.cpp
 	$(CXX) -I$(SYSTEMPERL) -c $^
