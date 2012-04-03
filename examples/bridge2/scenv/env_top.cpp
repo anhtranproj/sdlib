@@ -1,10 +1,12 @@
 #include "systemc.h"
 #include "systemperl.h"
-#include "verilated_vcd_c.h"
+#include "verilated_vcd_sc.h"
 #include "SpTraceVcd.h"
 #include <unistd.h>
 #include "Vbridge_ex2.h"
 #include "gmii_driver.h"
+
+#define LL_PAGES 4096
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -18,9 +20,10 @@ int sc_main(int argc, char *argv[])
   int index;
   char dumpfile_name[FILENAME_SZ];
   char mem_src_name[FILENAME_SZ];
-  VerilatedVcdC *tfp;
+  VerilatedVcdSc *tfp;
   gmii_driver *driver[4];
   char driver_name[40];
+  uint64_t sa;
 	
   sc_clock clk("clk", 8, SC_NS, 0.5);
 
@@ -84,7 +87,7 @@ int sc_main(int argc, char *argv[])
   // Start Verilator traces
   if (dumping) {
     Verilated::traceEverOn(true);
-    tfp = new VerilatedVcdC;
+    tfp = new VerilatedVcdSc;
     bridge_ex2.trace (tfp, 99);
     tfp->open (dumpfile_name);
   }
@@ -94,6 +97,15 @@ int sc_main(int argc, char *argv[])
 
   sc_start(100);
   reset.write (0);
+  // wait for core to self-initialize
+  sc_start (LL_PAGES*8+100);
+
+  // send one packet on each port
+  for (int g=0; g<4; g++) {
+    sa = (g+1) % 4 + 1;
+    printf ("DEBUG: sa=%lld\n", sa);
+    driver[g]->send_packet (g%4+1, sa, 64);
+  }
   sc_start(50000);
   /*
     sc_close_vcd_trace_file (trace_file);

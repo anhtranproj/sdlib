@@ -35,18 +35,20 @@ void gmii_driver::print_packet(int len) {
 void gmii_driver::send_packet (uint64_t da, uint64_t sa, int len) 
 {
   int i, crc;
+  uint64_t shift;
 
-  for (i=0; i<6; i++) 
-    txbuf[i] = da >> (uint64_t) (56-i*8);
+  for (i=0; i<6; i++) {
+    txbuf[i] = da >> (uint64_t) (40-i*8);
+  }
   for (i=0; i<6; i++)
-    txbuf[i+6] = sa >> (uint64_t) (56-i*8);
+    txbuf[i+6] = sa >> (uint64_t) (40-i*8);
 
   for (i=12; i<(len-4); i++)
     txbuf[i] = random();
 
   crc = calc_crc (len-4);
 
-  printf ("Sending packet DA=%x SA=%x of length %0d\n", da, sa, len);
+  printf ("Sending packet DA=%12llx SA=%12llx of length %0d\n", da, sa, len);
   print_packet (len);
 
   sending = 1;
@@ -55,7 +57,17 @@ void gmii_driver::send_packet (uint64_t da, uint64_t sa, int len)
 }
 
 void gmii_driver::event() {
-  if (sending) {
+  if (sending==1) {
+    if (send_index == 7) {
+      rxd = 0xD5;
+      send_index = 0;
+      sending = 2;
+    } else {
+      rxd = 0x55;
+      send_index++;
+    }
+    rx_dv = 1;
+  } else if (sending == 2) {
     rx_dv = 1;
     rxd = txbuf[send_index];
     send_index++;

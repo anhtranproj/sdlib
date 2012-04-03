@@ -6,7 +6,7 @@ LINKOPT=-L$(SYSTEMC)/lib-linux -lsystemc -lm
 DEFINES=-DDEBUG
 OBJFILES=env_top.o gmii_driver.o \
 $(VERIDIR)/Vbridge_ex2__ALL.a \
-verilated.o verilated_vcd_c.o Sp.o
+verilated.o verilated_vcd_sc.o verilated_vcd_c.o Sp.o
 OPT_FAST=-O2
 
 CXX=g++ -g $(OPT_FAST) $(INCLUDES) $(DEFINES)
