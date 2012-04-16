@@ -1,14 +1,16 @@
-// Top level for bridge example
-//
-// 4-port bridge has 4 GMII interfaces, each one of which has its own RX clock
-// Port macros contain all packet buffering, and ring interface to communicate
-// with other port macros.
-// FIB block receives requests from all ports and sends results back to the
-// same port containing forwarding information.
+/*! \author Guy Hutchison
+ *  \brief Top level for bridge example
+ * 
+ *  4-port bridge has 4 GMII interfaces, each one of which has its own RX clock
+ *  Port macros contain all packet buffering, and ring interface to communicate
+ *  with other port macros.
+ *  FIB block receives requests from all ports and sends results back to the
+ *  same port containing forwarding information.
+ */
 
 module bridge_ex2
-  (input  clk,
-   input  reset,
+  (input  clk,    //% 125 Mhz system clock
+   input  reset,  //% Active high system reset
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input                gmii_rx_clk_0,          // To p0 of port_macro.v

@@ -13,9 +13,9 @@ module sample_test;
 
       fork
 	env_top.driver0.send_packet (1, 2, 32);
-	env_top.driver1.send_packet (2, 3, 64);
-	env_top.driver2.send_packet (3, 4, 64);
-	env_top.driver3.send_packet (4, 1, 64);
+  	env_top.driver1.send_packet (2, 3, 64);
+        env_top.driver2.send_packet (3, 4, 64);
+        env_top.driver3.send_packet (4, 1, 64);
       join
 
       #2000;

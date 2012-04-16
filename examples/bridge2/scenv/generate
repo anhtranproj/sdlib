@@ -1,6 +1,6 @@
 #!/bin/bash
 
-~/tools/bin/verilator --sc --trace --top-module bridge_ex2 -f bridge.vf
+verilator --sc --trace --top-module bridge_ex2 -f bridge.vf
 
 cd obj_dir
 make -f Vbridge_ex2.mk

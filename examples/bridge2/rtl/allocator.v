@@ -1,13 +1,15 @@
+`timescale 1ns/100ps
+
 module allocator
   (
-   input         clk,
-   input         reset,
+   input         clk,    //% System clock
+   input         reset,  //% Active high reset
 
-   input	       	crx_abort,
-   input       		crx_commit,
-   input [`PFW_SZ-1:0]	crx_data,
-   output reg		crx_drdy,
-   input		crx_srdy,
+   input	       	crx_abort,  //% asserted at end of packet, indicates packet drop
+   input       		crx_commit, //% asserted at end of packet, indicates packet accept
+   input [`PFW_SZ-1:0]	crx_data,   //% Incoming data from accumulator
+   output 		crx_drdy,   //% destination flow control
+   input		crx_srdy,   //% source data available
 
    // page request i/f
    output            par_srdy,
@@ -33,6 +35,12 @@ module allocator
    input                   a2f_drdy
    );
 
+  wire 			   icrx_srdy;
+
+  reg 			   icrx_drdy;
+  wire 			   icrx_commit, icrx_abort;
+  wire [`PFW_SZ-1:0] 	   icrx_data;
+   
   reg [2:0]                pcount;
   reg [1:0]                word_count;
   reg [`LL_PG_ASZ-1:0]     start_pg;
@@ -114,6 +122,17 @@ module allocator
         $display ("%t %m: Sent packet (%0d,%0d)", $time, start_pg, cur_pg);
     end
 
+  sd_iohalf #(.width(`PFW_SZ+2)) crx_buf
+    (.clk (clk), .reset (reset),
+
+     .c_srdy (crx_srdy),
+     .c_drdy (crx_drdy),
+     .c_data ({crx_commit,crx_abort,crx_data}),
+
+     .p_srdy (icrx_srdy),
+     .p_drdy (icrx_drdy),
+     .p_data ({icrx_commit,icrx_abort,icrx_data}));
+  
   //------------------------------------------------------------
   // 
   //------------------------------------------------------------
@@ -127,7 +146,7 @@ module allocator
 
   always @*
     begin
-      crx_drdy = 0;
+      icrx_drdy = 0;
       obuf_srdy = 0;
       lnp_srdy = 0;
       nxt_start_pg = start_pg;
@@ -154,14 +173,14 @@ module allocator
 
         s_noalloc :
           begin
-            if (crx_srdy & obuf_drdy)
+            if (icrx_srdy & obuf_drdy)
               begin
-                crx_drdy = 1;
+                icrx_drdy = 1;
                 obuf_srdy = 1;
                 nxt_cur_line = cur_line + 1;
-                if (`ANY_EOP(crx_data[`PRW_PCC]))
+                if (`ANY_EOP(icrx_data[`PRW_PCC]))
                   begin
-                    if (crx_commit)
+                    if (icrx_commit)
                       nxt_state = s_commit;
                     else
                       nxt_state = s_abort;
@@ -170,7 +189,7 @@ module allocator
                   begin
                     nxt_state = s_link;
                   end
-              end // if (crx_srdy & obuf_drdy)
+              end // if (icrx_srdy & obuf_drdy)
           end // case: s_noalloc
 
 
@@ -228,12 +247,12 @@ module allocator
         begin
           start_pg <= nxt_start_pg;
           cur_pg   <= nxt_cur_pg;
-          cur_line <= #1 nxt_cur_line;
+          cur_line <= nxt_cur_line;
           state    <= nxt_state;
         end
     end
 
-  assign obuf_pbr_word[`PBR_DATA] = crx_data;
+  assign obuf_pbr_word[`PBR_DATA] = icrx_data;
   assign obuf_pbr_word[`PBR_ADDR] = obuf_addr;
   assign obuf_pbr_word[`PBR_WRITE] = 1'b1;
   assign obuf_pbr_word[`PBR_PORT]  = 0;
