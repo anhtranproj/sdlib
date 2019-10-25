@@ -40,15 +40,14 @@
 `ifndef _SD_INPUT_V_
 `define _SD_INPUT_V_
 
-// Clocking statement for synchronous blocks.  Default is for
-// posedge clocking and positive async reset
+// Clocking statement for synchronous blocks.
 `ifndef SDLIB_CLOCKING 
- `define SDLIB_CLOCKING posedge clk or posedge reset
+ `define SDLIB_CLOCKING posedge clk
 `endif
 
 // delay unit for nonblocking assigns, default is to #1
 `ifndef SDLIB_DELAY 
- `define SDLIB_DELAY #1 
+ `define SDLIB_DELAY
 `endif
 
 module sd_input

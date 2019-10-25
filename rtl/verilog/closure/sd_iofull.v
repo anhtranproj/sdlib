@@ -46,7 +46,7 @@
 
 // delay unit for nonblocking assigns, default is to #1
 `ifndef SDLIB_DELAY 
- `define SDLIB_DELAY #1 
+ `define SDLIB_DELAY
 `endif
 
 module sd_iofull #(
