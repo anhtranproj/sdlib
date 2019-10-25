@@ -35,15 +35,14 @@
 // For more information, please refer to <http://unlicense.org/> 
 //----------------------------------------------------------------------
 
-// Clocking statement for synchronous blocks.  Default is for
-// posedge clocking and positive async reset
+// Clocking statement for synchronous blocks.
 `ifndef SDLIB_CLOCKING 
- `define SDLIB_CLOCKING posedge clk or posedge reset
+ `define SDLIB_CLOCKING posedge clk
 `endif
 
 // delay unit for nonblocking assigns, default is to #1
 `ifndef SDLIB_DELAY 
- `define SDLIB_DELAY #1 
+ `define SDLIB_DELAY 
 `endif
 
 module sd_output
@@ -60,30 +59,47 @@ module sd_output
    output reg [width-1:0] p_data
    );
 
-  reg 	  load;   // true when data will be loaded into p_data
-  reg 	  nxt_p_srdy;
+//   reg      load;   // true when data will be loaded into p_data
+//   reg      nxt_p_srdy;
+// 
+//   always @*
+//     begin
+//       ic_drdy = p_drdy | !p_srdy;
+//       load  = ic_srdy & ic_drdy;
+//       nxt_p_srdy = load | (p_srdy & !p_drdy);
+//     end
+//   
+//   always @(`SDLIB_CLOCKING)
+//     begin
+//       if (reset)
+//  begin
+//    p_srdy <= `SDLIB_DELAY 0;
+//  end
+//       else
+//  begin
+//    p_srdy <= `SDLIB_DELAY nxt_p_srdy;
+//  end // else: !if(reset)
+//     end // always @ (posedge clk)
+// 
+//   always @(posedge clk)
+//     if (load)
+//       p_data <= `SDLIB_DELAY ic_data;
 
-  always @*
-    begin
-      ic_drdy = p_drdy | !p_srdy;
-      load  = ic_srdy & ic_drdy;
-      nxt_p_srdy = load | (p_srdy & !p_drdy);
+    //====== Rewritten by Anh Tran (Andrew)
+    assign ic_drdy = ~p_srdy | p_drdy;
+    
+    always @(posedge clk) begin
+        if (reset) 
+            p_srdy <= 1'b0;
+        else if (ic_srdy)
+            p_srdy <= 1'b1;
+        else if (ic_drdy)
+            p_srdy <= 1'b0;
     end
-  
-  always @(`SDLIB_CLOCKING)
-    begin
-      if (reset)
-	begin
-	  p_srdy <= `SDLIB_DELAY 0;
-	end
-      else
-	begin
-	  p_srdy <= `SDLIB_DELAY nxt_p_srdy;
-	end // else: !if(reset)
-    end // always @ (posedge clk)
 
-  always @(posedge clk)
-    if (load)
-      p_data <= `SDLIB_DELAY ic_data;
+    always @(posedge clk) begin
+        if (ic_srdy & ic_drdy)
+            p_data <= ic_data;
+    end
 
 endmodule // it_output
